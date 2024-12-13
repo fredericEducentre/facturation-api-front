@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturation App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="text-center">Gestion des Factures</h1>
+
+        <div class="mb-3">
+            <button id="load-factures" class="btn btn-primary">Charger les Factures</button>
+            <button id="add-facture" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#factureModal">Ajouter une Facture</button>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Client</th>
+                    <th>Montant</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="factures-table-body">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="factureModal" tabindex="-1" aria-labelledby="factureModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="factureModalLabel">Ajouter une Facture</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="facture-form">
+                        <div class="mb-3">
+                            <label for="client" class="form-label">Client</label>
+                            <input type="text" id="client" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="montant" class="form-label">Montant</label>
+                            <input type="number" id="montant" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" id="date" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const apiUrl = 'http://localhost:3000/factures';
+
+        document.getElementById('load-factures').addEventListener('click', loadFactures);
+        document.getElementById('facture-form').addEventListener('submit', addFacture);
+
+        function loadFactures() {
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('factures-table-body');
+                    tableBody.innerHTML = '';
+                    data.forEach(facture => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${facture.id}</td>
+                            <td>${facture.client}</td>
+                            <td>${facture.montant}</td>
+                            <td>${facture.date}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editFacture(${facture.id})">Modifier</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteFacture(${facture.id})">Supprimer</button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                });
+        }
+
+        function addFacture(event) {
+            event.preventDefault();
+
+            const client = document.getElementById('client').value;
+            const montant = document.getElementById('montant').value;
+            const date = document.getElementById('date').value;
+
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ client, montant, date })
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadFactures();
+                const modal = bootstrap.Modal.getInstance(document.getElementById('factureModal'));
+                modal.hide();
+            });
+        }
+
+        function deleteFacture(id) {
+            fetch(`${apiUrl}/${id}`, {
+                method: 'DELETE'
+            })
+            .then(() => loadFactures());
+        }
+
+        function editFacture(id) {
+            alert('Cette fonctionnalité n\'est pas encore implémentée.');
+        }
+    </script>
+</body>
+</html>
